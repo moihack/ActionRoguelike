@@ -9,7 +9,10 @@ void ASAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	RunBehaviorTree(BehaviorTree);
+	if (ensureMsgf(BehaviorTree, TEXT("Behavior Tree is nullptr! Please assign BehaviorTree in your AI Controller")))
+	{
+		RunBehaviorTree(BehaviorTree);
+	}
 
 	// below lines were commented out since ASAICharacter::OnPawnSeen is now responsible for setting TargetActor value.
 	//APawn* MyPawn = UGameplayStatics::GetPlayerPawn(this, 0);
