@@ -17,6 +17,8 @@ ASAICharacter::ASAICharacter()
     AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
 
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+    TimeToHitParamName = "TimeToHit";
 }
 
 void ASAICharacter::PostInitializeComponents()
@@ -37,6 +39,8 @@ void ASAICharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponen
         {
             SetTargetActor(InstigatorActor); // Currently not checking if who hit is also an AICharacter. This could lead to AI fighting each other, similar to Monster infighting in DOOM games.
         }
+
+        GetMesh()->SetScalarParameterValueOnMaterials(TimeToHitParamName, GetWorld()->TimeSeconds);
 
         if (NewHealth <= 0.0f) // AI Character just died
         {
