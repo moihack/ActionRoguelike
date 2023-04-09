@@ -33,6 +33,11 @@ void ASAICharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponen
     if (Delta < 0.0f)
     {
 
+        if (InstigatorActor != this)
+        {
+            SetTargetActor(InstigatorActor); // Currently not checking if who hit is also an AICharacter. This could lead to AI fighting each other, similar to Monster infighting in DOOM games.
+        }
+
         if (NewHealth <= 0.0f) // AI Character just died
         {
             // stop BT
@@ -53,17 +58,19 @@ void ASAICharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponen
     }
 }
 
-void ASAICharacter::OnPawnSeen(APawn* Pawn) // Note, this function will never run until the AI has seen the Player. 
+void ASAICharacter::SetTargetActor(AActor* NewTarget)
 {
     AAIController* AIC = Cast<AAIController>(GetController());
     if (AIC)
     {
-        UBlackboardComponent* BBComp = AIC->GetBlackboardComponent();
-
+        AIC->GetBlackboardComponent()->SetValueAsObject("TargetActor", NewTarget);
         // "TargetActor" key in BB can be left empty if not seen the pawn yet. 
-        // Also see QueryContext_TargetActor BP asset in editor for a solution (Cast Failed part).
-        BBComp->SetValueAsObject("TargetActor", Pawn); 
-
-        DrawDebugString(GetWorld(), GetActorLocation(), "PLAYER STPOTTED", nullptr, FColor::White, 4.0f, true);
+        // See QueryContext_TargetActor BP asset in editor for a solution (Cast Failed part).
     }
+}
+
+void ASAICharacter::OnPawnSeen(APawn* Pawn) // Note, this function will never run until the AI has seen the Player. 
+{
+    SetTargetActor(Pawn);
+    DrawDebugString(GetWorld(), GetActorLocation(), "PLAYER STPOTTED", nullptr, FColor::White, 4.0f, true);
 }
