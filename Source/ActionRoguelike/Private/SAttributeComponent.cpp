@@ -38,3 +38,23 @@ bool USAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, float Delt
 	return ActualDelta != 0;
 }
 
+USAttributeComponent* USAttributeComponent::GetAttributes(AActor* FromActor)
+{
+	if (FromActor)
+	{
+		return Cast<USAttributeComponent>(FromActor->GetComponentByClass(USAttributeComponent::StaticClass()));
+	}
+
+	return nullptr;
+}
+
+bool USAttributeComponent::IsActorAlive(AActor* Actor) // static function defined in header file. Do NOT repeat the static keyword in implementation!
+{
+	USAttributeComponent* AttributeComp = USAttributeComponent::GetAttributes(Actor); // since this is a static function there is NO access to this->IsAlive() , hence the use of (static as well) GetAttributes
+	if (AttributeComp)
+	{
+		return AttributeComp->IsAlive();
+	}
+	return false; // default behavior : if no AttributeComponent is found consider actor dead
+}
+
