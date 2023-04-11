@@ -10,6 +10,11 @@ USAttributeComponent::USAttributeComponent()
 	Health = HealthMax;
 }
 
+bool USAttributeComponent::Kill(AActor* InstigatorActor)
+{
+	return ApplyHealthChange(InstigatorActor, -GetHealthMax()); // -(minus) sign so that this becomes damage and not healing
+}
+
 bool USAttributeComponent::IsAlive() const
 {
 	return (Health > 0.0f);
@@ -28,6 +33,13 @@ float USAttributeComponent::GetHealthMax() const
 
 bool USAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, float Delta)
 {
+	// God mode is already a console command (God) that will set CanBeDamaged to false on Pawn controlled by player. 
+	// Also check for Delta < 0 to only allow healing to go through as health change in God mode.
+	if (!GetOwner()->CanBeDamaged() && Delta < 0.f)
+	{
+		return false;
+	}
+
 	float OldHealth = Health;
 
 	Health = FMath::Clamp(Health + Delta, 0.0f, HealthMax);

@@ -46,4 +46,7 @@ public:
 
 	virtual void StartPlay() override; // calls BeginPlay on actors.
 
+	UFUNCTION(Exec)
+	void KillAll();
+
 };

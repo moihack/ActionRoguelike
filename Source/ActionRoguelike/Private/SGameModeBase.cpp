@@ -24,6 +24,21 @@ void ASGameModeBase::StartPlay()
 
 }
 
+void ASGameModeBase::KillAll()
+{
+	for (TActorIterator<ASAICharacter> It(GetWorld()); It; ++It) // see comments below for alternate implementations
+	{
+		ASAICharacter* Bot = *It;
+
+		USAttributeComponent* AttributeComp = USAttributeComponent::GetAttributes(Bot);
+		if (ensure(AttributeComp) && AttributeComp->IsAlive())
+		{
+			// @fixme: maybe pass in player? for kill credit
+			AttributeComp->Kill(this); // SGameModeBase inheritance chain : AGameModeBase->AInfo->AActor . So GameMode is also an actor and can be passed as instigator actor in Kill function.
+		}
+	}
+}
+
 void ASGameModeBase::SpawnBotTimerElapsed()
 {
 	int32 NrOfAliveBots = 0;

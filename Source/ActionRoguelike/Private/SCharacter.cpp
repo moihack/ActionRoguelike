@@ -182,6 +182,11 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::Jump);
 }
 
+void ASCharacter::HealSelf(float Amount /* = 100*/) // /**/ default parameter reminder - change this if the value changes in the header file.
+{
+	AttributeComp->ApplyHealthChange(this, Amount);
+}
+
 void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
 {
 	if (ensureAlways(ClassToSpawn))

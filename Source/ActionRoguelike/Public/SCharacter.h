@@ -106,4 +106,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// The function can be executed from the in-game console.
+	// Exec commands only function when declared within certain Classes. These are : GameMode, "The character you are playing with"/PlayerCharacter, PlayerController, CheatManager
+	// for example adding this to SAICharacter would not work, as it is not part of the classes mentioned above.
+	UFUNCTION(Exec) 
+	void HealSelf(float Amount = 100);
+
 };
