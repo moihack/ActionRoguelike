@@ -19,9 +19,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	FBlackboardKeySelector AttackRangeKey;
 
+	/* Max desired attack range of AI pawn */
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float MaxAttackRange;
+
 	// copy-pasted from header #include "BehaviorTree/BTService.h"
 	/** update next tick interval
 	 * this function should be considered as const (don't modify state of object) if node is not instanced! */
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
+public:
+
+	USBTService_CheckAttackRange();
 };

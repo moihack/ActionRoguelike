@@ -24,8 +24,6 @@ EBTNodeResult::Type USBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& O
 			return EBTNodeResult::Failed;
 		}
 
-		FVector MuzzleLocation = MyPawn->GetMesh()->GetSocketLocation("Muzzle_01");
-
 		AActor* TargetActor = Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("TargetActor"));
 
 		if (TargetActor == nullptr)
@@ -38,10 +36,11 @@ EBTNodeResult::Type USBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& O
 			return EBTNodeResult::Failed;
 		}
 
+		FVector MuzzleLocation = MyPawn->GetMesh()->GetSocketLocation("Muzzle_01");
 		FVector Direction = TargetActor->GetActorLocation() - MuzzleLocation;
 		FRotator MuzzleRotation = Direction.Rotation();
 
-		MuzzleRotation.Pitch += FMath::RandRange(0.0f, maxBulletSpread); // don't allow shooting at the floor since it makes the AI look dumb
+		MuzzleRotation.Pitch += FMath::RandRange(0.0f, maxBulletSpread); // ignore negative pitch to NOT allow shooting at the floor since it makes the AI look dumb
 		MuzzleRotation.Yaw += FMath::RandRange(-maxBulletSpread, maxBulletSpread);
 
 		FActorSpawnParameters Params;

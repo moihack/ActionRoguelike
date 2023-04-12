@@ -22,6 +22,7 @@ class ACTIONROGUELIKE_API USBTTask_RangedAttack : public UBTTaskNode
 
 protected:
 
+	/* Max Random Bullet Spread (in Degrees) in positive and negative angle (shared between Yaw and Pitch) */
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float maxBulletSpread;
 
