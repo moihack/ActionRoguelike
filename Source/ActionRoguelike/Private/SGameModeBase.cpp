@@ -8,6 +8,7 @@
 #include "SAttributeComponent.h"
 #include "EngineUtils.h" // for TActorIterator
 #include "DrawDebugHelpers.h"
+#include "SCharacter.h"
 
 ASGameModeBase::ASGameModeBase()
 {
@@ -96,4 +97,46 @@ void ASGameModeBase::OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryIn
 		// Track al the used spawn locations
 		DrawDebugSphere(GetWorld(), Locations[0], 50.0f, 20, FColor::Blue, false, 60.0f);
 	}
+}
+
+void ASGameModeBase::RespawnPlayerElapsed(AController* Controller)
+{
+	if (ensure(Controller))
+	{
+		Controller->UnPossess();
+
+		RestartPlayer(Controller);
+	}
+}
+
+void ASGameModeBase::OnActorKilled(AActor* VictimActor, AActor* Killer)
+{
+	ASCharacter* Player = Cast<ASCharacter>(VictimActor);
+	if (Player)
+	{
+		// FTimerHandle as local variable and NOT exposed in header on purpose.
+		// Otherwise this could lead to a bug in a multiplayer setting.
+		// In case the TimerHandle exists on the header, 
+		// if two players die almost simultaneously then
+		// SetTimer would be called again for the same handle and end up resetting the timer instead!
+		// On that occasion the first player would be killed but never respawn
+		// while the 2nd player would respawn normally.
+		FTimerHandle TimerHandle_RespawnDelay; 
+
+		FTimerDelegate Delegate;
+		Delegate.BindUFunction(this, "RespawnPlayerElapsed", Player->GetController());
+
+		float RespawnDelay = 2.0f;
+		
+		GetWorldTimerManager().SetTimer(TimerHandle_RespawnDelay, Delegate, RespawnDelay, false);
+
+		// Example on how timer was set inside SCharacter
+		// GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, AttackAnimDelay);
+
+		// Setting it similarly here would not work as intended as we need to also pass a parameter in RespawnPlayerElapsed 
+		// hence we have to use an FTimerDelegate and bind to a UFUNCTION to achieve that instead.
+		// GetWorldTimerManager().SetTimer(TimerHandle_RespawnDelay, this, &ASGameModeBase::RespawnPlayerElapsed, RespawnDelay);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("OnActorKilled : Victim: %s, Killer: %s"), *GetNameSafe(VictimActor), *GetNameSafe(Killer));
 }
