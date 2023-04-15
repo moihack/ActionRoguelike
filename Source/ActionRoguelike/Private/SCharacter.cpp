@@ -93,9 +93,7 @@ void ASCharacter::SprintStop()
 
 void ASCharacter::PrimaryAttack()
 {
-	StartAttackEffects();
-
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, AttackAnimDelay);
+	ActionComp->StartActionByName(this, "PrimaryAttack");
 
 	//GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack); // example of clearing a timer
 }
@@ -107,9 +105,7 @@ void ASCharacter::PrimaryAttack_TimeElapsed()
 
 void ASCharacter::BlackHoleAttack()
 {
-	StartAttackEffects();
-
-	GetWorldTimerManager().SetTimer(TimerHandle_BlackholeAttack, this, &ASCharacter::BlackholeAttack_TimeElapsed, AttackAnimDelay);
+	ActionComp->StartActionByName(this, "Blackhole");
 }
 
 void ASCharacter::BlackholeAttack_TimeElapsed()
@@ -119,9 +115,8 @@ void ASCharacter::BlackholeAttack_TimeElapsed()
 
 void ASCharacter::Dash()
 {
-	StartAttackEffects();
+	ActionComp->StartActionByName(this, "Dash");
 
-	GetWorldTimerManager().SetTimer(TimerHandle_Dash, this, &ASCharacter::Dash_TimeElapsed, AttackAnimDelay);
 }
 
 void ASCharacter::Dash_TimeElapsed()
