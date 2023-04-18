@@ -31,8 +31,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Tags")
 	FGameplayTagContainer BlockedTags;
 
+	bool bIsRunning;
 
 public:
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	bool IsRunning() const;
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Action")
+	bool CanStart(AActor* Instigator);
 
 	// Although both Start/Stop Action are overriden in child classes (but called from base SAction references) 
 	// virtual keyword is not added here (if added you get -> LogCompile: Error: BlueprintNativeEvent functions must be non-virtual.)
