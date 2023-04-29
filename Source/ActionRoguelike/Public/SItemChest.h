@@ -27,6 +27,12 @@ public:
 
 protected:
 
+	UPROPERTY(ReplicatedUsing="OnRep_LidOpened", BlueprintReadOnly) // ReplicatedUsing in C++ is the equivalent of RepNotify in BP
+	bool bLidOpened;
+
+	UFUNCTION() // must mark it as UFUNCTION so binding of RepNotify (ReplicatedUsing=) can work
+	void OnRep_LidOpened();
+
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BaseMesh;
 

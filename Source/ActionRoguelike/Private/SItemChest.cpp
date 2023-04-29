@@ -3,10 +3,18 @@
 
 #include "SItemChest.h"
 #include "Components/StaticMeshComponent.h"
+#include "Net/UnrealNetwork.h"
 
 void ASItemChest::Interact_Implementation(APawn* InstigatorPawn)
 {
-	LidMesh->SetRelativeRotation(FRotator(TargetPitch, 0, 0));
+	bLidOpened = !bLidOpened;
+	OnRep_LidOpened(); // RepNotify functions need to be manually called on the Server! This runs on the server thanks to how SInteractionComponent is setup.
+}
+
+void ASItemChest::OnRep_LidOpened() // automatically called on all clients when variable changes
+{
+	float currPitch = bLidOpened ? TargetPitch : 0.0f;
+	LidMesh->SetRelativeRotation(FRotator(currPitch, 0, 0));
 }
 
 // Sets default values
@@ -22,6 +30,8 @@ ASItemChest::ASItemChest()
 	LidMesh->SetupAttachment(BaseMesh);
 
 	TargetPitch = 110;
+
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -38,3 +48,9 @@ void ASItemChest::Tick(float DeltaTime)
 
 }
 
+void ASItemChest::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const //function is defined in the ClassName.generated.h
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASItemChest, bLidOpened);
+}
