@@ -25,13 +25,17 @@ public:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = "Attributes")
 	float Health;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = "Attributes")
 	float HealthMax;
 
 public:	
+
+	// Note : Reliable + Multicast = ignore relevancy ! good use for e.g. chat message
+	UFUNCTION(NetMulticast, Reliable) // @FIXME: mark as unreliable once we moved the 'state' out of SCharacter.
+	void MulticastHealthChanged(AActor* InstigatorActor, float NewHealth, float Delta);
 
 	UFUNCTION(BlueprintCallable)
 	bool Kill(AActor* InstigatorActor);

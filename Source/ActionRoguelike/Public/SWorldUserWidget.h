@@ -28,6 +28,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "UI")
 	FVector WorldOffset;
 
-	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	// could be left as BlueprintReadOnly and it would still work fine thanks to ExposeOnSpawn
+	UPROPERTY(BlueprintReadWrite, Category = "UI", meta = (ExposeOnSpawn=true))
 	AActor* AttachedActor;
 };
