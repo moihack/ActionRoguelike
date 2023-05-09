@@ -11,9 +11,8 @@ USActionComponent::USActionComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	SetIsReplicatedByDefault(true);
 }
-
 
 // Called when the game starts
 void USActionComponent::BeginPlay()
@@ -80,6 +79,26 @@ bool USActionComponent::StartActionByName(AActor* Instigator, FName ActionName)
 				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FailedMsg);
 				continue; // although unlikely there may be another Action in Actions TArray with the same name which would potentially execute hence we don't immediately exit/return from the for loop.
 			}
+
+			// Is Client? - Otherwise infinite loop if called from server! since ServerStartAction_Implementation would call StartActionByName again.
+			if (!GetOwner()->HasAuthority())
+			{
+				// Question : Why is the following line executed (indeed) on the server despite being called from a client?
+				// 
+				// Answer : Since the SActionComponent is owned by a PlayerCharacter (SCharacter),
+				// which in turn is owned by a PlayerController which in turn is also owned by a connection
+				// the RPC invoked from client will indeed execute/run on the server.
+				// For further details read about Ownership here: https://docs.unrealengine.com/4.27/en-US/InteractiveExperiences/Networking/Actors/OwningConnections/
+				// as well as about RPCs here : https://docs.unrealengine.com/4.27/en-US/InteractiveExperiences/Networking/Actors/RPCs/
+				// Make sure to check the RPC tables showcased in the 2nd link ("RPC invoked from a client" table for this specific case).
+				// 
+				ServerStartAction(Instigator, ActionName);
+				//
+				// Note/non-working example : calling a server event from an "unowned actor" or "actor Owned by a different client" would not succeed (DROPPED)
+				// since that actor would NOT be owned by a PlayerController (and therefore a connection) 
+				// as explained in the "RPC invoked from a client" table in the 2nd link above.
+			}
+
 			Action->StartAction(Instigator);
 			return true;
 		}
@@ -103,4 +122,9 @@ bool USActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
 	}
 
 	return false;
+}
+
+void USActionComponent::ServerStartAction_Implementation(AActor* Instigator, FName ActionName) // _Implementation needs to be used for Server functions as well
+{
+	StartActionByName(Instigator, ActionName);
 }
