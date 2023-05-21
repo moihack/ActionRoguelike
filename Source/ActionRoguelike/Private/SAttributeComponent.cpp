@@ -13,6 +13,9 @@ USAttributeComponent::USAttributeComponent()
 	HealthMax = 100;
 	Health = HealthMax;
 
+	Rage = 0;
+	RageMax = 100;
+
 	SetIsReplicatedByDefault(true); // call this instead of SetReplicates(true) when replicating components and only inside the constructor!
 }
 
@@ -76,6 +79,26 @@ bool USAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, float Delt
 		{
 			GM->OnActorKilled(GetOwner(), InstigatorActor);
 		}
+	}
+
+	return ActualDelta != 0;
+}
+
+float USAttributeComponent::GetRage() const
+{
+	return Rage;
+}
+
+bool USAttributeComponent::ApplyRage(AActor* InstigatorActor, float Delta)
+{
+	float OldRage = Rage;
+
+	Rage = FMath::Clamp(Rage + Delta, 0.0f, RageMax);
+
+	float ActualDelta = Rage - OldRage;
+	if (ActualDelta != 0.0f)
+	{
+		OnRageChanged.Broadcast(InstigatorActor, this, Rage, ActualDelta);
 	}
 
 	return ActualDelta != 0;
