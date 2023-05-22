@@ -3,6 +3,7 @@
 
 #include "SAction.h"
 #include "SActionComponent.h"
+#include "../ActionRoguelike.h"
 
 bool USAction::CanStart_Implementation(AActor* Instigator) // called in USActionComponent::StartActionByName
 {
@@ -26,7 +27,8 @@ bool USAction::CanStart_Implementation(AActor* Instigator) // called in USAction
 
 void USAction::StartAction_Implementation(AActor* Instigator) 
 {
-	UE_LOG(LogTemp, Log, TEXT("Running: %s"), *GetNameSafe(this));
+	//UE_LOG(LogTemp, Log, TEXT("Started: %s"), *GetNameSafe(this));
+	LogOnScreen(this, FString::Printf(TEXT("Started: %s"), *ActionName.ToString()), FColor::Green);
 
 	USActionComponent* Comp = GetOwningComponent();
 	Comp->ActiveGameplayTags.AppendTags(GrantsTags);
@@ -36,7 +38,8 @@ void USAction::StartAction_Implementation(AActor* Instigator)
 
 void USAction::StopAction_Implementation(AActor* Instigator)
 {
-	UE_LOG(LogTemp, Log, TEXT("Stopped: %s"), *GetNameSafe(this));
+	//UE_LOG(LogTemp, Log, TEXT("Stopped: %s"), *GetNameSafe(this));
+	LogOnScreen(this, FString::Printf(TEXT("Stopped: %s"), *ActionName.ToString()), FColor::White);
 
 	// This ensure would trigger when launching the SAME ATTACK TWICE in QUICK SUCCESSION (via double-clicking, press Q twice quickly etc).
 	// It can happen for all abilities (MagicProjectile, Dash, Blackhole) regardless of the attack type. 
