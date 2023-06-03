@@ -20,6 +20,9 @@ class ACTIONROGUELIKE_API USAction : public UObject
 
 protected:
 
+	UPROPERTY(Replicated)
+	USActionComponent* ActionComp;
+
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	USActionComponent* GetOwningComponent() const;
 
@@ -31,9 +34,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Tags")
 	FGameplayTagContainer BlockedTags;
 
+	UPROPERTY(ReplicatedUsing="OnRep_IsRunning")
 	bool bIsRunning;
 
+	UFUNCTION()
+	void OnRep_IsRunning();
+
 public:
+
+	void Initialize(USActionComponent* NewActionComp);
 
 	// Start immediately when added to an ActionComponent
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
@@ -63,4 +72,9 @@ public:
 	// (like gameplay statics, spawning of actors, line traces, sweeps etc) 
 	// will not show up in blueprint editor window in child classes.
 	UWorld* GetWorld() const override; 
+
+	virtual bool IsSupportedForNetworking() const // implement directly in header since this just returns true
+	{
+		return true;
+	}
 };

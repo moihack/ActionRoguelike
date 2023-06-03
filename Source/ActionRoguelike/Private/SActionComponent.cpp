@@ -4,6 +4,8 @@
 #include "SActionComponent.h"
 #include "SAction.h"
 #include "../ActionRoguelike.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/ActorChannel.h"
 
 // Sets default values for this component's properties
 USActionComponent::USActionComponent()
@@ -20,11 +22,14 @@ void USActionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (TSubclassOf<USAction> ActionClass : DefaultActions)
+	// Server-only
+	if (GetOwner()->HasAuthority())
 	{
-		AddAction(GetOwner(), ActionClass);
+		for (TSubclassOf<USAction> ActionClass : DefaultActions)
+		{
+			AddAction(GetOwner(), ActionClass);
+		}
 	}
-	
 }
 
 
@@ -58,9 +63,11 @@ void USActionComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> Acti
 		return;
 	}
 
-	USAction* NewAction = NewObject<USAction>(this, ActionClass);
+	USAction* NewAction = NewObject<USAction>(GetOwner(), ActionClass); // setting Outer to Actor owning Component. Also see USAction::GetWorld() implementation.
 	if (ensure(NewAction))
 	{
+		NewAction->Initialize(this);
+
 		Actions.Add(NewAction);
 
 		// if an Action shall be autostarted but can't yet start,
@@ -155,4 +162,25 @@ bool USActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
 void USActionComponent::ServerStartAction_Implementation(AActor* Instigator, FName ActionName) // _Implementation needs to be used for Server functions as well
 {
 	StartActionByName(Instigator, ActionName);
+}
+
+bool USActionComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
+{
+	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+	for (USAction* Action : Actions)
+	{
+		if (Action)
+		{
+			WroteSomething |= Channel->ReplicateSubobject(Action, *Bunch, *RepFlags);
+		}
+	}
+
+	return WroteSomething;
+}
+
+void USActionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const //function is defined in the ClassName.generated.h
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(USActionComponent, Actions);
 }

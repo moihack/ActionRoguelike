@@ -4,6 +4,12 @@
 #include "SAction.h"
 #include "SActionComponent.h"
 #include "../ActionRoguelike.h"
+#include "Net/UnrealNetwork.h"
+
+void USAction::Initialize(USActionComponent* NewActionComp)
+{
+	ActionComp = NewActionComp;
+}
 
 bool USAction::CanStart_Implementation(AActor* Instigator) // called in USActionComponent::StartActionByName
 {
@@ -52,7 +58,8 @@ void USAction::StopAction_Implementation(AActor* Instigator)
 	// This however only works if the Content is setup correctly (e.g. all BP attack actions have BlockedTags properly set).
 	// That's why the IsRunning() check has been left in place in USAction::CanStart_Implementation.
 	// This way the ensure won't trigger regardless of BlockedTags set in Action_XXX_BP asset.
-	ensureAlways(bIsRunning); 
+	
+	// ensureAlways(bIsRunning); // disabled ensure in L21 : Networking UObjects & Actions (Action System) as it only makes sense on the server. Due to how multiplayer is setup it will unnecessarily trigger on the client.
 
 	USActionComponent* Comp = GetOwningComponent();
 	Comp->ActiveGameplayTags.RemoveTags(GrantsTags);
@@ -63,21 +70,56 @@ void USAction::StopAction_Implementation(AActor* Instigator)
 UWorld* USAction::GetWorld() const
 {
 	// Outer is set when creating action via NewObject<T> (in USActionComponent::AddAction)
-	UActorComponent* Comp = Cast<UActorComponent>(GetOuter()); // No need to cast to USActionComponent.
-	if (Comp) // Comp could be null since the Engine/Editor may call GetWorld() in a SAction object with Outer assigned to something else than USActionComponent.
-	{
-		return Comp->GetWorld();
+	AActor* Actor = Cast<AActor>(GetOuter()); // No need to cast to USActionComponent.
+	if (Actor) // Comp (now called Actor) could be null since the Engine/Editor may call GetWorld() in a SAction object with Outer assigned to something else than USActionComponent.
+	{		   // Comp was actually null due to that in L21 : Networking UObjects & Actions (Action System) at 14:55, hence the change to AActor type from UActorComponent
+		return Actor->GetWorld();
 	}
+
+	// question from lecture regarding the change above, where Comp need to be changed to Actor:
+	// why did unreal change the outer from actioncomp to the playercharacter?
+	// 
+	// answer (from Tom Looman) : It's because Unreal is instantiating those UObjects on the client side for us. 
+	// The server tells the clients to make those instances via Replication. 
+	// The client then instantiates them but specifies its own Outer (not the one we defined on the server) 
+	// and so there is a difference. (Unreal didn't change anything on the server-side).
+
+	// Note (by me): Server set Outer to AActor while client set Outer to USActionComp so there was a mismatch between types
+	// and calling GetOuter() and GetOwningComponent() (also changed below) would not yield the same results on both client and server.
+
+	// According to other comments in lecture this change seems to be uneccessary in UE5+ . 
 
 	return nullptr;
 }
 
 USActionComponent* USAction::GetOwningComponent() const
 {
-	return Cast<USActionComponent>(GetOuter());
+	//return Cast<USActionComponent>(GetOuter()); // see above comments in USAction::GetWorld() on why this had to be changed.
+
+	return ActionComp;
+}
+
+void USAction::OnRep_IsRunning()
+{
+	if (bIsRunning)
+	{
+		StartAction(nullptr); // will fix in next class and pass Instigator
+	}
+	else
+	{
+		StopAction(nullptr); // will fix in next class and pass Instigator
+	}
 }
 
 bool USAction::IsRunning() const
 {
 	return bIsRunning;
+}
+
+void USAction::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const //function is defined in the ClassName.generated.h
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(USAction, bIsRunning);
+	DOREPLIFETIME(USAction, ActionComp);
 }
