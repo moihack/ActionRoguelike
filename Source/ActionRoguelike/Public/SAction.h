@@ -34,6 +34,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Tags")
 	FGameplayTagContainer BlockedTags;
 
+	// A note regarding RepNotify execution:
+	// RepNotify executes only when the client variable is different from what the server sent.
+	// 
+	// Example: in this case a client (let's call him client1) has set bIsRunning to true, all other clients still have bIsRunning to false.
+	// The server then sents a packet (to all clients) stating that bIsRunning is now set to true/ has now been changed to true.
+	// Now client1 will NOT execute the RepNotify since it already has set its copy of bIsRunning variable to true.
+	// This could lead to a variety of issues where some logic does not get executed on client1 .
+	// 
+	// In this project though, we change the bIsRunning variable on client on purpose to avoid an infinite loop of launching the same action again and again.
 	UPROPERTY(ReplicatedUsing="OnRep_IsRunning")
 	bool bIsRunning;
 
