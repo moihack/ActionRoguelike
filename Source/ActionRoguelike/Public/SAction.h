@@ -10,8 +10,23 @@
 class UWorld;
 class USActionComponent;
 
+USTRUCT()
+struct FActionRepData
+{
+	GENERATED_BODY()
+
+public:
+
+	// UPROPERTY(NotReplicated) // if you don't want to replicate something within a struct that will be replicated you would have to use the NotReplicated specifier!
+	UPROPERTY()
+	bool bIsRunning;
+
+	UPROPERTY()
+	AActor* Instigator;
+};
+
 /**
- * 
+ *
  */
 UCLASS(Blueprintable) // mark as Blueprintable otherwise child objects cannot be created in BPs (will not show up in editor when creating a new BP class).
 class ACTIONROGUELIKE_API USAction : public UObject
@@ -44,13 +59,24 @@ protected:
 	// 
 	// In this project though, we change the bIsRunning variable on client on purpose to avoid an infinite loop of launching the same action again and again.
 	// NOTE : You can still make the client always execute the RepNotify even if they have changed the variable locally already.
-	// You can do so by using //DOREPLIFETIME_CONDITION_NOTIFY(USAction, ActionComp, COND_None, REPNOTIFY_Always); in USAction::GetLifetimeReplicatedProps
-	// info taken from : https://forums.unrealengine.com/t/repnotify-from-c-confusion/3327/10
-	UPROPERTY(ReplicatedUsing="OnRep_IsRunning")
-	bool bIsRunning;
+	// You can do so by using //DOREPLIFETIME_CONDITION_NOTIFY(USAction, ActionComp, COND_None, REPNOTIFY_Always); // Info from : https://forums.unrealengine.com/t/repnotify-from-c-confusion/3327/10
+	// in USAction::Get Lifetime Replicated Props
+	// WARNING : There seems to be a bug in UnrealHeaderTool (UHT) which would not generate the "Get Lifetime Replicated Props" function declaration in generated.h file
+	// resulting in compilation error in SAction cpp. Splitting the words that make up the function name with a space seems to solve the compilation issue.
+	// Still it is pretty weird that UHT did get confused by that despite being marked in a comment //.
+
+	// All comments above are still valid but bIsRunning changed type (and name) in class L21 : Limiting Authority of the Client . 
+	// It was only kept in place just for the sake of the example mentioned in the comments above.
+	//UPROPERTY(ReplicatedUsing="OnRep_IsRunning")
+	//bool bIsRunning;
+
+	// Making a struct with 2 values instead of simply adding a second replicated value (e.g. the Instigator), 
+	// ensures that both values will arrive at the same time.
+	UPROPERTY(ReplicatedUsing = "OnRep_RepData")
+	FActionRepData RepData;
 
 	UFUNCTION()
-	void OnRep_IsRunning();
+	void OnRep_RepData();
 
 public:
 
@@ -71,7 +97,7 @@ public:
 	// See SAction.cpp and SAction_ProjectileAttack.h on why this works
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Action")
-	void StartAction(AActor* Instigator); 
+	void StartAction(AActor* Instigator);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Action")
 	void StopAction(AActor* Instigator);
@@ -80,12 +106,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	FName ActionName; // FName is hashed - Faster than FString for comparing between different ActionNames
 
-	// must implement this for UObjects otherwise certain functions :
-	// (like gameplay statics, spawning of actors, line traces, sweeps etc) 
-	// will not show up in blueprint editor window in child classes.
-	UWorld* GetWorld() const override; 
+		// must implement this for UObjects otherwise certain functions :
+		// (like gameplay statics, spawning of actors, line traces, sweeps etc) 
+		// will not show up in blueprint editor window in child classes.
+	UWorld* GetWorld() const override;
 
-	virtual bool IsSupportedForNetworking() const // implement directly in header since this just returns true
+	virtual bool IsSupportedForNetworking() const override // implement directly in header since this just returns true
 	{
 		return true;
 	}

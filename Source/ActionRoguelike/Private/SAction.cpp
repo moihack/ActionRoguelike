@@ -31,21 +31,22 @@ bool USAction::CanStart_Implementation(AActor* Instigator) // called in USAction
 // virtual keyword cannot appear in definition (e.g. virtual void USAction::StartAction_Implementation(AActor* Instigator) is not valid in .cpp file).
 // _Implementation is used for definition due to them being marked with UPROPERTY specifier BlueprintNativeEvent
 
-void USAction::StartAction_Implementation(AActor* Instigator) 
+void USAction::StartAction_Implementation(AActor* Instigator)
 {
-	//UE_LOG(LogTemp, Log, TEXT("Started: %s"), *GetNameSafe(this));
-	LogOnScreen(this, FString::Printf(TEXT("Started: %s"), *ActionName.ToString()), FColor::Green);
+	UE_LOG(LogTemp, Log, TEXT("Started: %s"), *GetNameSafe(this));
+	//LogOnScreen(this, FString::Printf(TEXT("Started: %s"), *ActionName.ToString()), FColor::Green);
 
 	USActionComponent* Comp = GetOwningComponent();
 	Comp->ActiveGameplayTags.AppendTags(GrantsTags);
 
-	bIsRunning = true;
+	RepData.bIsRunning = true;
+	RepData.Instigator = Instigator;
 }
 
 void USAction::StopAction_Implementation(AActor* Instigator)
 {
-	//UE_LOG(LogTemp, Log, TEXT("Stopped: %s"), *GetNameSafe(this));
-	LogOnScreen(this, FString::Printf(TEXT("Stopped: %s"), *ActionName.ToString()), FColor::White);
+	UE_LOG(LogTemp, Log, TEXT("Stopped: %s"), *GetNameSafe(this));
+	//LogOnScreen(this, FString::Printf(TEXT("Stopped: %s"), *ActionName.ToString()), FColor::White);
 
 	// This ensure would trigger when launching the SAME ATTACK TWICE in QUICK SUCCESSION (via double-clicking, press Q twice quickly etc).
 	// It can happen for all abilities (MagicProjectile, Dash, Blackhole) regardless of the attack type. 
@@ -58,13 +59,14 @@ void USAction::StopAction_Implementation(AActor* Instigator)
 	// This however only works if the Content is setup correctly (e.g. all BP attack actions have BlockedTags properly set).
 	// That's why the IsRunning() check has been left in place in USAction::CanStart_Implementation.
 	// This way the ensure won't trigger regardless of BlockedTags set in Action_XXX_BP asset.
-	
+
 	// ensureAlways(bIsRunning); // disabled ensure in L21 : Networking UObjects & Actions (Action System) as it only makes sense on the server. Due to how multiplayer is setup it will unnecessarily trigger on the client.
 
 	USActionComponent* Comp = GetOwningComponent();
 	Comp->ActiveGameplayTags.RemoveTags(GrantsTags);
 
-	bIsRunning = false;
+	RepData.bIsRunning = false;
+	RepData.Instigator = Instigator;
 }
 
 UWorld* USAction::GetWorld() const
@@ -99,28 +101,28 @@ USActionComponent* USAction::GetOwningComponent() const
 	return ActionComp;
 }
 
-void USAction::OnRep_IsRunning()
+void USAction::OnRep_RepData()
 {
-	if (bIsRunning)
+	if (RepData.bIsRunning)
 	{
-		StartAction(nullptr); // will fix in next class and pass Instigator
+		StartAction(RepData.Instigator);
 	}
 	else
 	{
-		StopAction(nullptr); // will fix in next class and pass Instigator
+		StopAction(RepData.Instigator);
 	}
 }
 
 bool USAction::IsRunning() const
 {
-	return bIsRunning;
+	return RepData.bIsRunning;
 }
 
 void USAction::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const //function is defined in the ClassName.generated.h
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(USAction, bIsRunning);
+	DOREPLIFETIME(USAction, RepData);
 	DOREPLIFETIME(USAction, ActionComp);
 	//DOREPLIFETIME_CONDITION_NOTIFY(USAction, ActionComp, COND_None, REPNOTIFY_Always); // see NOTE above bIsRunning in SAction.h
 }
