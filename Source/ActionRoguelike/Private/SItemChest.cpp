@@ -9,6 +9,11 @@ void ASItemChest::Interact_Implementation(APawn* InstigatorPawn)
 {
 	bLidOpened = !bLidOpened;
 	OnRep_LidOpened(); // RepNotify functions need to be manually called on the Server! This runs on the server thanks to how SInteractionComponent is setup.
+	// In C++ RepNotify / ReplicatedUsing - functions only get called on clients on replication.
+	// The server, after setting the replicated values, has to call the OnRep - function manually 
+	// because the server is responsible for setting the replicated values and does not receive them as replication
+	// the server has to call the RepNotifies manually. Explanation from : https://forums.unrealengine.com/t/repnotify-function-only-executes-on-clients-not-on-the-server/88010/
+	// Does the same apply to Blueprints as well though?
 }
 
 void ASItemChest::OnRep_LidOpened() // automatically called on all clients when variable changes

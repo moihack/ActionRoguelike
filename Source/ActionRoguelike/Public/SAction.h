@@ -43,6 +43,9 @@ protected:
 	// This could lead to a variety of issues where some logic does not get executed on client1 .
 	// 
 	// In this project though, we change the bIsRunning variable on client on purpose to avoid an infinite loop of launching the same action again and again.
+	// NOTE : You can still make the client always execute the RepNotify even if they have changed the variable locally already.
+	// You can do so by using //DOREPLIFETIME_CONDITION_NOTIFY(USAction, ActionComp, COND_None, REPNOTIFY_Always); in USAction::GetLifetimeReplicatedProps
+	// info taken from : https://forums.unrealengine.com/t/repnotify-from-c-confusion/3327/10
 	UPROPERTY(ReplicatedUsing="OnRep_IsRunning")
 	bool bIsRunning;
 

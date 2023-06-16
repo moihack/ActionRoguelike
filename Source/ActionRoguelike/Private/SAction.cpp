@@ -122,4 +122,5 @@ void USAction::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME(USAction, bIsRunning);
 	DOREPLIFETIME(USAction, ActionComp);
+	//DOREPLIFETIME_CONDITION_NOTIFY(USAction, ActionComp, COND_None, REPNOTIFY_Always); // see NOTE above bIsRunning in SAction.h
 }
