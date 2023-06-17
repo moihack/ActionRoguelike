@@ -58,6 +58,13 @@ void USActionComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> Acti
 		return;
 	}
 
+	// if a client tries to add an action - early out and warn us in debug log
+	if (!GetOwner()->HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client attempting to AddAction. [Class: %s]"), *GetNameSafe(ActionClass));
+		return;
+	}
+
 	USAction* NewAction = NewObject<USAction>(GetOwner(), ActionClass); // setting Outer to Actor owning Component. Also see USAction::GetWorld() implementation.
 	if (ensure(NewAction))
 	{
@@ -145,7 +152,13 @@ bool USActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
 		{
 			if (Action->IsRunning())
 			{
-				Action->StopAction(Instigator);
+				// is client? then send server RPC to stop action. also see USActionComponent::StartActionByName comments above
+				if (!GetOwner()->HasAuthority())
+				{		
+					ServerStopAction(Instigator, ActionName);
+				}
+
+				Action->StopAction(Instigator); // also stop the action locally so no lag occurs.
 				return true;
 			}
 		}
@@ -157,6 +170,11 @@ bool USActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
 void USActionComponent::ServerStartAction_Implementation(AActor* Instigator, FName ActionName) // _Implementation needs to be used for Server functions as well
 {
 	StartActionByName(Instigator, ActionName);
+}
+
+void USActionComponent::ServerStopAction_Implementation(AActor* Instigator, FName ActionName) // _Implementation needs to be used for Server functions as well
+{
+	StopActionByName(Instigator, ActionName);
 }
 
 bool USActionComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)

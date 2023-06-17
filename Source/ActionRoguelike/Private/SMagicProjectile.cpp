@@ -40,7 +40,7 @@ void ASMagicProjectile::OnActorOverlap(UPrimitiveComponent* OverlappedComponent,
 		{
 			Explode();
 
-			if (ActionComp)
+			if (ActionComp && HasAuthority()) // allow adding burning action only on server side
 			{
 				ActionComp->AddAction(GetInstigator(), BurningActionClass);
 			}
