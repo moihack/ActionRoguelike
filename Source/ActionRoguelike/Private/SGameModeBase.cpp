@@ -10,6 +10,8 @@
 #include "DrawDebugHelpers.h"
 #include "SCharacter.h"
 #include "SPlayerState.h"
+#include "Kismet/GameplayStatics.h"
+#include "SSaveGame.h"
 
 static TAutoConsoleVariable<bool> CVarSpawnBots(TEXT("su.SpawnBots"), true, TEXT("Enable spawning of bots via timer."), ECVF_Cheat);
 
@@ -23,6 +25,15 @@ ASGameModeBase::ASGameModeBase()
 	RequiredPowerupDistance = 2000;
 
 	PlayerStateClass = ASPlayerState::StaticClass(); // alternative way to assign default GameMode classes without assigning them from Editor via GameMode inherited Blueprint.
+
+	SlotName = "SaveGame01";
+}
+
+void ASGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+
+	LoadSaveGame(); // load save game as early as possible
 }
 
 void ASGameModeBase::StartPlay()
@@ -235,5 +246,31 @@ void ASGameModeBase::OnActorKilled(AActor* VictimActor, AActor* Killer)
 		{
 			PS->AddCredits(CreditsPerKill);
 		}
+	}
+}
+
+void ASGameModeBase::WriteSaveGame()
+{
+	UGameplayStatics::SaveGameToSlot(CurrentSaveGame, SlotName, 0);
+}
+
+void ASGameModeBase::LoadSaveGame()
+{
+	if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+	{
+		CurrentSaveGame = Cast<USSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+		if (CurrentSaveGame == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to load SaveGame Data."));
+			return;
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Loaded SaveGame Data."));
+	}
+	else
+	{
+		CurrentSaveGame = Cast<USSaveGame>(UGameplayStatics::CreateSaveGameObject(USSaveGame::StaticClass()));
+
+		UE_LOG(LogTemp, Warning, TEXT("Created New SaveGame Data."));
 	}
 }
