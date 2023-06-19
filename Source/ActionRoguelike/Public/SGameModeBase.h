@@ -81,6 +81,17 @@ public:
 
 	virtual void StartPlay() override; // calls BeginPlay on actors.
 
+	// Since this is marked as BlueprintNativeEvent in base class AGameModeBase we have to override the implementation part of the function.
+	// Note that HandleStartingNewPlayer is also declared as Non-Virtual in base class AGameModeBase!
+	// However UnrealHeaderTool will generate the _Implementation part as virtual, hence us repeating the word virtual in our declaration for clarity.
+	// 
+	// Please note that repeating the word virtual is not required (but certainly helps to know which methods 
+	// were previously declared as virtual in base class just by looking at their declaration in derived class). 
+	// 
+	// On another note, overriding of non-virtual methods is legal but it won't make use of dynamic dispatch/late binding! 
+	// (e.g. if Derived obj overriden function is called from Base obj ptr, the Base obj original (non-virtual!) function will get called instead!
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+
 	UFUNCTION(Exec)
 	void KillAll();
 
