@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "SSaveGame.h"
 #include "GameFramework/GameStateBase.h"
+#include "SGameplayInterface.h"
 
 static TAutoConsoleVariable<bool> CVarSpawnBots(TEXT("su.SpawnBots"), true, TEXT("Enable spawning of bots via timer."), ECVF_Cheat);
 
@@ -71,7 +72,7 @@ void ASGameModeBase::HandleStartingNewPlayer_Implementation(APlayerController* N
 
 void ASGameModeBase::KillAll()
 {
-	for (TActorIterator<ASAICharacter> It(GetWorld()); It; ++It) // see comments below for alternate implementations
+	for (TActorIterator<ASAICharacter> It(GetWorld()); It; ++It) // see comments below in SpawnBotTimerElapsed() for alternate implementations
 	{
 		ASAICharacter* Bot = *It;
 
@@ -274,6 +275,28 @@ void ASGameModeBase::WriteSaveGame()
 		}
 	}
 
+	// clear saved actors array before saving 
+	// otherwise we end up appending actors to (previously saved/loaded) CurrentSaveGame
+	// Not only will the SaveGame grow big in size as more saves happen
+	// but loading would also be broken as the game would always load "the first version" ever saved of the previously saved actors
+	CurrentSaveGame->SavedActors.Empty(); 
+
+	for (FActorIterator It(GetWorld()); It; ++It) // see comments above in SpawnBotTimerElapsed() for alternate implementations
+	{
+		AActor* Actor = *It;
+		// Only interested in our 'gameplay actors'
+		if (!Actor->Implements<USGameplayInterface>()) // we could search using a filter above e.g. make a new interface like USSaveGameInterface
+		{
+			continue;
+		}
+
+		FActorSaveData ActorData;
+		ActorData.ActorName = Actor->GetName();
+		ActorData.Transform = Actor->GetActorTransform();
+
+		CurrentSaveGame->SavedActors.Add(ActorData);
+	}
+
 	UGameplayStatics::SaveGameToSlot(CurrentSaveGame, SlotName, 0);
 }
 
@@ -289,6 +312,27 @@ void ASGameModeBase::LoadSaveGame()
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Loaded SaveGame Data."));
+
+		for (FActorIterator It(GetWorld()); It; ++It) // see comments above in SpawnBotTimerElapsed() for alternate implementations
+		{
+			AActor* Actor = *It;
+			// Only interested in our 'gameplay actors'
+			if (!Actor->Implements<USGameplayInterface>())
+			{
+				continue;
+			}
+
+			for (FActorSaveData ActorData : CurrentSaveGame->SavedActors)
+			{
+				if (ActorData.ActorName == Actor->GetName()) 
+				{
+					Actor->SetActorTransform(ActorData.Transform);
+					break; // we found the actor to restore its transform - time to search for next actor in world to load its saved data.
+				}
+			}
+
+		}
+
 	}
 	else
 	{
@@ -296,4 +340,7 @@ void ASGameModeBase::LoadSaveGame()
 
 		UE_LOG(LogTemp, Warning, TEXT("Created New SaveGame Data."));
 	}
+
+	
+
 }
