@@ -20,6 +20,10 @@ public:
 	/* For movable Actors, keep location,rotation,scale. */
 	UPROPERTY()
 	FTransform Transform;
+
+	/* Contains all 'SaveGame' marked variables of the Actor */
+	UPROPERTY()
+	TArray<uint8> ByteData;
 };
 
 /**

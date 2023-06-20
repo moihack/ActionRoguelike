@@ -14,6 +14,7 @@
 #include "SSaveGame.h"
 #include "GameFramework/GameStateBase.h"
 #include "SGameplayInterface.h"
+#include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 
 static TAutoConsoleVariable<bool> CVarSpawnBots(TEXT("su.SpawnBots"), true, TEXT("Enable spawning of bots via timer."), ECVF_Cheat);
 
@@ -294,6 +295,26 @@ void ASGameModeBase::WriteSaveGame()
 		ActorData.ActorName = Actor->GetName();
 		ActorData.Transform = Actor->GetActorTransform();
 
+		///// NOTE : comments about saving taken from : https://www.tomlooman.com/unreal-engine-cpp-save-system/
+		// also see comments in LoadSaveGame()
+		 
+		// To convert variables into a binary array we need an FMemoryWriter. 
+		// Pass the array to fill with data from Actor
+		FMemoryWriter MemWriter(ActorData.ByteData);
+
+		// FObjectAndNameAsStringProxyArchive which is derived from FArchive
+		// (Unreal’s data container for all sorts of serialized data including your game content).
+		FObjectAndNameAsStringProxyArchive Ar(MemWriter, true);
+
+		// Find only variables with UPROPERTY(SaveGame)
+		Ar.ArIsSaveGame = true;
+
+		// Converts Actor's SaveGame UPROPERTIES into binary array
+		// the Serialize() function available in every UObject / Actor 
+		// to convert our variables to a binary array and back into variables again. 
+		// To decide which variables to store, Unreal uses a ‘SaveGame’ UPROPERTY specifier.
+		Actor->Serialize(Ar);
+
 		CurrentSaveGame->SavedActors.Add(ActorData);
 	}
 
@@ -326,8 +347,26 @@ void ASGameModeBase::LoadSaveGame()
 			{
 				if (ActorData.ActorName == Actor->GetName()) 
 				{
-					Actor->SetActorTransform(ActorData.Transform);
-					break; // we found the actor to restore its transform - time to search for next actor in world to load its saved data.
+					Actor->SetActorTransform(ActorData.Transform);	
+
+					///// NOTE : comments about saving taken from : https://www.tomlooman.com/unreal-engine-cpp-save-system/
+					// also see comments in WriteSaveGame()
+
+					// use an FMemoryReader to convert each Actor’s binary data back into “Unreal” Variables.
+					FMemoryReader MemReader(ActorData.ByteData);
+
+					FObjectAndNameAsStringProxyArchive Ar(MemReader, true);
+					Ar.ArIsSaveGame = true;
+
+					// Convert binary array back into actor's variables
+					// Somewhat confusingly we still use Serialize() on the Actor, 
+					// but because we pass in an FMemoryReader instead of an FMemoryWriter 
+					// the function can be used to pass saved variables back into the Actors.
+					Actor->Serialize(Ar);
+
+					ISGameplayInterface::Execute_OnActorLoaded(Actor);
+
+					break; // we found the actor to restore its saved data - time to search for next actor in world to load its saved data.
 				}
 			}
 

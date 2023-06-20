@@ -20,6 +20,8 @@ public:
 	float TargetPitch;
 
 	void Interact_Implementation(APawn* InstigatorPawn);
+
+	void OnActorLoaded_Implementation();
 	
 public:	
 	// Sets default values for this actor's properties
@@ -27,7 +29,7 @@ public:
 
 protected:
 
-	UPROPERTY(ReplicatedUsing="OnRep_LidOpened", BlueprintReadOnly) // ReplicatedUsing in C++ is the equivalent of RepNotify in BP
+	UPROPERTY(ReplicatedUsing="OnRep_LidOpened", BlueprintReadOnly, SaveGame) // ReplicatedUsing in C++ is the equivalent of RepNotify in BP
 	bool bLidOpened;
 
 	UFUNCTION() // must mark it as UFUNCTION so binding of RepNotify (ReplicatedUsing=) can work

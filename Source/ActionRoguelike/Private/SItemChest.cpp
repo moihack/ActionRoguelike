@@ -16,6 +16,11 @@ void ASItemChest::Interact_Implementation(APawn* InstigatorPawn)
 	// Does the same apply to Blueprints as well though?
 }
 
+void ASItemChest::OnActorLoaded_Implementation()
+{
+	OnRep_LidOpened(); // restore lid position after loading from a previously saved game
+}
+
 void ASItemChest::OnRep_LidOpened() // automatically called on all clients when variable changes
 {
 	float currPitch = bLidOpened ? TargetPitch : 0.0f;
