@@ -61,14 +61,18 @@ void ASGameModeBase::StartPlay()
 }
 
 void ASGameModeBase::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
-{
-	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
-
+{	
+	// Calling Before Super:: so we set variables before 'beginplayingstate' is called in PlayerController (which is where we instantiate UI in PlayerController_BP)
 	ASPlayerState* PS = NewPlayer->GetPlayerState<ASPlayerState>();
-	if (PS)
+	if (ensure(PS))
 	{
 		PS->LoadPlayerState(CurrentSaveGame);
 	}
+
+	// this eventually will call APlayerController::BeginPlayingState 
+	// (which is where we instantiate UI in PlayerController_BP which needs PlayerState to be available)
+	// hence we first load the PlayerState from savegame to ensure UI gets correct initial (loaded) values.
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer); 
 }
 
 void ASGameModeBase::KillAll()
@@ -253,8 +257,10 @@ void ASGameModeBase::OnActorKilled(AActor* VictimActor, AActor* Killer)
 	}
 
 	APawn* KillerPawn = Cast<APawn>(Killer);
-	if (KillerPawn)
+	// Don't credit kills of self
+	if (KillerPawn && KillerPawn != VictimActor)
 	{
+		// Only Players will have a 'PlayerState' instance, bots have nullptr
 		// AI enemies don't have PlayerState by default (unless bWantsPlayerState is set to true in AAIController)
 		if (ASPlayerState* PS = KillerPawn->GetPlayerState<ASPlayerState>()) // < can cast and check for nullptr within if-statement.
 		{
