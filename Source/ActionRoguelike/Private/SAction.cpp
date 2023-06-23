@@ -41,6 +41,9 @@ void USAction::StartAction_Implementation(AActor* Instigator)
 
 	RepData.bIsRunning = true;
 	RepData.Instigator = Instigator;
+
+	// TODO: we could replace GetOwningComponent() with Comp variable created above but currently following class code 1:1
+	GetOwningComponent()->OnActionStarted.Broadcast(GetOwningComponent(), this);
 }
 
 void USAction::StopAction_Implementation(AActor* Instigator)
@@ -67,6 +70,9 @@ void USAction::StopAction_Implementation(AActor* Instigator)
 
 	RepData.bIsRunning = false;
 	RepData.Instigator = Instigator;
+
+	// TODO: we could replace GetOwningComponent() with Comp variable created above but currently following class code 1:1
+	GetOwningComponent()->OnActionStopped.Broadcast(GetOwningComponent(), this);
 }
 
 UWorld* USAction::GetWorld() const
