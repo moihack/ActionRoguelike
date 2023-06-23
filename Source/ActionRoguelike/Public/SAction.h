@@ -81,6 +81,8 @@ protected:
 	UFUNCTION()
 	void OnRep_RepData();
 
+	float TimeStarted;
+
 public:
 
 	void Initialize(USActionComponent* NewActionComp);
