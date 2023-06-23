@@ -3,6 +3,7 @@
 
 #include "SActionEffect.h"
 #include "SActionComponent.h"
+#include "GameFramework/GameStateBase.h"
 
 USActionEffect::USActionEffect()
 {
@@ -63,8 +64,16 @@ void USActionEffect::StopAction_Implementation(AActor* Instigator)
 
 float USActionEffect::GetTimeRemaining() const
 {
-	float EndTime = TimeStarted + Duration;
-	return EndTime - GetWorld()->TimeSeconds;
+	AGameStateBase* GS = GetWorld()->GetGameState<AGameStateBase>();
+	if (GS) // GameState may still getting replicated to a client that just joined the game hence the check if GS is valid
+	{
+		float EndTime = TimeStarted + Duration;
+		// GS->GetServerWorldTimeSeconds() gets the seconds the game is running on the server
+		// which may be diffrent from a client that just joined the game and used GetWorld()->TimeSeconds (which gets the time game is running on that particular client)
+		return EndTime - GS->GetServerWorldTimeSeconds(); 
+	}
+
+	return Duration; // just a sane default value to return in case GS was not valid
 }
 
 void USActionEffect::ExecutePeriodicEffect_Implementation(AActor* InstigatorActor)

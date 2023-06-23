@@ -42,7 +42,11 @@ void USAction::StartAction_Implementation(AActor* Instigator)
 	RepData.bIsRunning = true;
 	RepData.Instigator = Instigator;
 
-	TimeStarted = GetWorld()->TimeSeconds;
+	// this part should only run on the server - alternative check to HasAuthority showcased here.
+	if (GetOwningComponent()->GetOwnerRole() == ROLE_Authority) 
+	{
+		TimeStarted = GetWorld()->TimeSeconds; // TimeStarted now set on server and since it is replicated it has the same value for all clients
+	}
 
 	// TODO: we could replace GetOwningComponent() with Comp variable created above but currently following class code 1:1
 	GetOwningComponent()->OnActionStarted.Broadcast(GetOwningComponent(), this);
@@ -133,4 +137,5 @@ void USAction::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLi
 	DOREPLIFETIME(USAction, RepData);
 	DOREPLIFETIME(USAction, ActionComp);
 	//DOREPLIFETIME_CONDITION_NOTIFY(USAction, ActionComp, COND_None, REPNOTIFY_Always); // see NOTE above bIsRunning in SAction.h
+	DOREPLIFETIME(USAction, TimeStarted);
 }
