@@ -21,6 +21,17 @@ class ACTIONROGUELIKE_API ASPlayerController : public APlayerController
 	
 protected:
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PauseMenuClass;
+
+	UPROPERTY()
+	UUserWidget* PauseMenuInstance;
+
+	UFUNCTION(BlueprintCallable)
+	void TogglePauseMenu();
+
+	virtual void SetupInputComponent() override;
+
 	// UE5.0 finally exposed a function in AController::OnPossessedPawnChanged so need to use a custom delegate like OnPawnChanged below
 	UPROPERTY(BlueprintAssignable)
 	FOnPawnChanged OnPawnChanged;
