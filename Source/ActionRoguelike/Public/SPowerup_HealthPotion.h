@@ -22,5 +22,8 @@ public:
 
 	void Interact_Implementation(APawn* InstigatorPawn) override;
 
+	// See GetInteractText_Implementation in SPowerupActor.h regarding virtual keyword usage
+	virtual FText GetInteractText_Implementation(APawn* InstigatorPawn) override;
+
 	ASPowerup_HealthPotion();
 };
