@@ -5,12 +5,48 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "EnvironmentQuery/EnvQueryTypes.h" // necessary since we could not forward declare the enum needed in OnQueryCompleted -> EEnvQueryStatus::Type
+#include "Engine/DataTable.h"
 #include "SGameModeBase.generated.h"
 
 class UEnvQuery;
 class UEnvQueryInstanceBlueprintWrapper;
 class UCurveFloat;
 class USSaveGame;
+class UDataTable;
+class USMonsterData;
+
+/* DataTable Row for spawning monsters in game mode  */
+USTRUCT(BlueprintType) // BlueprintType as we want this struct/DataTable Row to be accesible to Blueprints.
+struct FMonsterInfoRow : public FTableRowBase // since the structs inherits from FTableRowBase we need to include "Engine/DataTable.h"
+{
+	GENERATED_BODY()
+
+public:
+
+	FMonsterInfoRow()	//default constructor
+	{
+		Weight = 1.0f;
+		SpawnCost = 5.0f;
+		KillReward = 20.0f;
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	USMonsterData* MonsterData;
+	//TSubclassOf<AActor> MonsterClass;
+
+	/* Relative chance to pick this monster */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Weight;
+
+	/* Points required by gamemode to spawn this unit. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float SpawnCost;
+
+	/* Amount of credits awarded to killer of this unit.  */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float KillReward;
+
+};
 
 /**
  * 
@@ -27,8 +63,12 @@ protected:
 	UPROPERTY()
 	USSaveGame* CurrentSaveGame;
 
+	/* All available monsters */
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	TSubclassOf<AActor> MinionClass;
+	UDataTable* MonsterTable;
+
+	//UPROPERTY(EditDefaultsOnly, Category = "AI")
+	//TSubclassOf<AActor> MinionClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	UEnvQuery* SpawnBotQuery;
