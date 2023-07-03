@@ -30,8 +30,10 @@ public:
 		KillReward = 20.0f;
 	}
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	USMonsterData* MonsterData;
+	// meta = (AllowedTypes = "Monsters")) - make sure to read https://benui.ca/unreal/uproperty/#allowedtypes
+	// Used only with FPrimaryAssetId's, to display only certain types of FPrimaryAssetType's in the asset picker of FPrimaryAssetId.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowedTypes = "Monsters")) // also see SMonsterData.h->GetPrimaryAssetId on why "Monsters" is the correct PrimaryAssetType
+	FPrimaryAssetId MonsterId;
 	//TSubclassOf<AActor> MonsterClass;
 
 	/* Relative chance to pick this monster */
@@ -104,6 +106,8 @@ protected:
 
 	UFUNCTION()
 	void OnBotSpawnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus);
+
+	void OnMonsterLoaded(FPrimaryAssetId LoadedId, FVector SpawnLocation);
 
 	UFUNCTION()
 	void OnPowerupSpawnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus);
