@@ -17,6 +17,11 @@ ASMagicProjectile::ASMagicProjectile()
 	SphereComp->SetSphereRadius(20.0f);
 	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnActorOverlap);
 
+	// Keep projectile alive for a maximum of 10sec (when not hitting a target). 
+	// Otherwise after many missed projectiles have been launched they start to heavily increase frame time
+	// since they keep doing calculations (particle effects etc).
+	InitialLifeSpan = 10.0f;  
+
 	DamageAmount = 20.0f;
 
 }

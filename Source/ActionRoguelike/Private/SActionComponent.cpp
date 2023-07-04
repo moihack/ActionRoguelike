@@ -7,6 +7,10 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/ActorChannel.h"
 
+DECLARE_CYCLE_STAT(TEXT("StartActionByName"), STAT_StartActionByName, STATGROUP_STANFORD);
+
+
+
 // Sets default values for this component's properties
 USActionComponent::USActionComponent()
 {
@@ -106,6 +110,23 @@ USAction* USActionComponent::GetAction(TSubclassOf<USAction> ActionClass) const
 
 bool USActionComponent::StartActionByName(AActor* Instigator, FName ActionName)
 {
+	SCOPE_CYCLE_COUNTER(STAT_StartActionByName); // this counts the execution cost (time) for the whole StartActionByName function
+
+	// you can only count a specific part of a function by using curly braces 
+	// to "embrace" the SCOPE_CYCLE_COUNTER MACRO. see example below in /* */
+	// info from : https://www.tomlooman.com/unreal-engine-profiling-stat-commands/#:~:text=called%20FrameworkZeroPCH.h)-,Finally,-%2C%20it%E2%80%99s%20important%20to
+	
+	/* 
+		// This part isn't counted
+
+		{
+			SCOPE_CYCLE_COUNTER(STAT_GetSingleModuleByClass);
+			// .. Only measures the code inside the curly braces.
+		}
+
+		// This part isn't counted either, it stops at the bracket above.
+	*/
+
 	for (USAction* Action : Actions)
 	{
 		if (Action && Action->ActionName == ActionName)
