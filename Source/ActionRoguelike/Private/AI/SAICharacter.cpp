@@ -27,7 +27,7 @@ ASAICharacter::ASAICharacter()
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
     // Disabled on capsule to let projectiles pass through capsule and hit mesh instead
-    GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore);
+    // GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore); // no longer needed as Projectile is now a custom Collision Object Channel/Type (ignored by default) and ECC_WorldDynamic won't be used.
     // Enabled on mesh to react to incoming projectiles
     GetMesh()->SetGenerateOverlapEvents(true);
 

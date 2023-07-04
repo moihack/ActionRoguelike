@@ -34,6 +34,9 @@ ASCharacter::ASCharacter()
 
 	bUseControllerRotationYaw = false;
 
+	// Enabled on mesh to react to incoming projectiles
+	GetMesh()->SetGenerateOverlapEvents(true);
+
 	TimeToHitParamName = "TimeToHit";
 }
 
