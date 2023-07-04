@@ -157,6 +157,9 @@ bool USActionComponent::StartActionByName(AActor* Instigator, FName ActionName)
 				// as explained in the "RPC invoked from a client" table in the 2nd link above.
 			}
 
+			// Bookmark for Unreal Insights
+			TRACE_BOOKMARK(TEXT("StartAction::%s"), *GetNameSafe(Action));
+
 			Action->StartAction(Instigator);
 			return true;
 		}
