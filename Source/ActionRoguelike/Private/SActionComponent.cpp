@@ -36,6 +36,27 @@ void USActionComponent::BeginPlay()
 	}
 }
 
+void USActionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	// The need for implementing EndPlay rises when a minion Enemy gets destroyed (after it dies) while still having an action-effect applied (e.g. burning).
+	// The action-effect would continue to execute for a "pending-kill" actor resulting in errors in message log. 
+	// The following code is a suitable fix, stopping all running actions after the Owning Actor calls EndPlay() when destroyed.
+
+	// Stop all
+	TArray<USAction*> ActionsCopy = Actions; // make a copy of Actions Array to avoid potential error mentioned below in the comments.
+	for (USAction* Action : ActionsCopy)
+	{
+		if (Action && Action->IsRunning())
+		{
+			Action->StopAction(GetOwner()); // Calling USActionEffect::StopAction_Implementation removes the action from the original Actions array.
+										    // But removing an item from an Array while iterating through it will crash the engine.
+											// Hence the need for copying the whole Actions Array to ActionsCopy variable for stopping the actions.
+		}
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
 
 // Called every frame
 void USActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
